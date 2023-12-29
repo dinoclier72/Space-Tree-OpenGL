@@ -29,7 +29,7 @@ def load_texture(filename):
     return texture_id
 
 # Draw a textured cylinder
-def draw_textured_cylinder(top_texture_id, bottom_texture_id, side_texture_id):
+def draw_textured_cylinder(top_texture_id, bottom_texture_id, side_texture_id, radius=2.0, height=1.0):
     glu_quad = gluNewQuadric()
     gluQuadricTexture(glu_quad, GL_TRUE)
     glEnable(GL_TEXTURE_2D)
@@ -37,13 +37,33 @@ def draw_textured_cylinder(top_texture_id, bottom_texture_id, side_texture_id):
     glPushMatrix()
     glRotatef(rotate_x, 1, 0, 0)
     glRotatef(rotate_y, 0, 1, 0)
-    gluCylinder(glu_quad, 2.0, 2.0, 1.0, 32, 32)
-    glTranslatef(0.0, 0.0, 1.0)  # Translate to the top of the cylinder
+    gluCylinder(glu_quad, radius, radius, height, 32, 32)
+    glTranslatef(0.0, 0.0, height)  # Translate to the top of the cylinder
     glBindTexture(GL_TEXTURE_2D, top_texture_id)
-    gluDisk(glu_quad, 0.0, 2.0, 32, 32)  # Draw the top face
-    glTranslatef(0.0, 0.0, -1.0)  # Translate to the bottom of the cylinder
+    gluDisk(glu_quad, 0.0, radius, 32, 32)  # Draw the top face
+    glTranslatef(0.0, 0.0, -height)  # Translate to the bottom of the cylinder
     glBindTexture(GL_TEXTURE_2D, bottom_texture_id)
-    gluDisk(glu_quad, 0.0, 2.0, 32, 32)  # Draw the bottom face
+    gluDisk(glu_quad, 0.0, radius, 32, 32)  # Draw the bottom face
+    glPopMatrix()
+    glDisable(GL_TEXTURE_2D)
+
+def draw_christmas_tree(trunk_texture_id, leaves_texture_id):
+    treeLayer = 5
+    treeHeight = 1.0
+    trunk_radius = 0.5
+    trunk_height = 2.0
+    tree = gluNewQuadric()
+    gluQuadricTexture(tree, GL_TRUE)
+    glEnable(GL_TEXTURE_2D)
+    glBindTexture(GL_TEXTURE_2D, trunk_texture_id)
+    glPushMatrix()
+    glTranslatef(0.0, 0.0, 1.0)
+    gluCylinder(tree, trunk_radius, trunk_radius, trunk_height, 32, 32)
+    glTranslatef(0.0, 0.0, trunk_height)
+    glBindTexture(GL_TEXTURE_2D, leaves_texture_id)
+    for layer in range(treeLayer):
+        gluCylinder(tree, trunk_radius*(treeLayer-layer), 0.0, treeHeight, 32, 32)
+        glTranslatef(0.0, 0.0, treeHeight)
     glPopMatrix()
     glDisable(GL_TEXTURE_2D)
 
@@ -126,12 +146,12 @@ def main():
     display = (800, 600)
     pygame.display.set_mode(display, DOUBLEBUF | OPENGL | GLUT_DEPTH)
     gluPerspective(45, (display[0] / display[1]), 0.1, 50.0)
-    gluLookAt(0, 10, 5,
-              0, 0, 0, 
+    gluLookAt(0, 15, 5,
+              0, 0, 4, 
               0, 0, 1)  # Add this line
     glTranslatef(0.0, 0.0, 0.0)
 
-    files = ["textures/brick_texture.jpg","textures/wood.jpg"]
+    files = ["textures/brick_texture.jpg","textures/wood.jpg","textures/leaves.jpg"]
     texture_id = [load_texture(f) for f in files]
 
     while True:
@@ -155,7 +175,9 @@ def main():
         glEnable(GL_DEPTH_TEST)
         glDepthFunc(GL_LESS)
 
-        draw_textured_cylinder(top_texture_id=texture_id[0], bottom_texture_id=texture_id[0], side_texture_id=texture_id[1])
+        draw_textured_cylinder(top_texture_id=texture_id[0], bottom_texture_id=texture_id[0], side_texture_id=texture_id[0], radius=4.0, height=1.0)
+        
+        draw_christmas_tree(trunk_texture_id=texture_id[1], leaves_texture_id=texture_id[2])
         glDisable(GL_TEXTURE_2D)
 
         pygame.display.flip()
