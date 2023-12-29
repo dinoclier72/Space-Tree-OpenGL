@@ -69,9 +69,6 @@ def draw_christmas_tree(trunk_texture_id, leaves_texture_id):
 
 # Draw a textured cube
 def draw_textured_cube(texture_id1,texture_id2,texture_id3,texture_id4,texture_id5,texture_id6):
-    glPushMatrix()
-    glRotatef(rotate_x, 1, 0, 0)
-    glRotatef(rotate_y, 0, 1, 0)
     # Load texture
     glBindTexture(GL_TEXTURE_2D, texture_id1)
     glBegin(GL_QUADS)
@@ -139,7 +136,16 @@ def draw_textured_cube(texture_id1,texture_id2,texture_id3,texture_id4,texture_i
     glTexCoord2f(0, 1)
     glVertex3f(1, -1, 1)
     glEnd()
+
+def draw_christmas_present(texture, size,x,y,z):
+    glPushMatrix()
+    glScalef(size,size,size)
+    glTranslatef(x,y,z+1)
+    glEnable(GL_TEXTURE_2D)
+    draw_textured_cube(texture,texture,texture,texture,texture,texture)
     glPopMatrix()
+    glDisable(GL_TEXTURE_2D)
+
 
 def main():
     pygame.init()
@@ -151,7 +157,12 @@ def main():
               0, 0, 1)  # Add this line
     glTranslatef(0.0, 0.0, 0.0)
 
-    files = ["textures/brick_texture.jpg","textures/wood.jpg","textures/leaves.jpg"]
+    files = ["textures/brick.jpg",
+             "textures/wood.jpg",
+             "textures/leaves.jpg",
+             "textures/present_blue.jpg",
+             "textures/present_yellow.jpg",
+             "textures/present_green.jpg"]
     texture_id = [load_texture(f) for f in files]
 
     while True:
@@ -171,15 +182,13 @@ def main():
 
         # Draw the textured cube
         # Draw the textured cylinder
-        glEnable(GL_TEXTURE_2D)
         glEnable(GL_DEPTH_TEST)
         glDepthFunc(GL_LESS)
 
         draw_textured_cylinder(top_texture_id=texture_id[0], bottom_texture_id=texture_id[0], side_texture_id=texture_id[0], radius=4.0, height=1.0)
-        
         draw_christmas_tree(trunk_texture_id=texture_id[1], leaves_texture_id=texture_id[2])
-        glDisable(GL_TEXTURE_2D)
-
+        draw_christmas_present(texture_id[3],0.33,2.5,5,4)
+        draw_christmas_present(texture_id[4],0.5,-2.5,5,3)
         pygame.display.flip()
         pygame.time.wait(10)
 
