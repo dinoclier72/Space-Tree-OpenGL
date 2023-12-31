@@ -11,9 +11,6 @@ from OpenGL.GL import *
 from OpenGL.GLU import *
 from OpenGL.GLUT import *
 
-rotate_x = 0.0
-rotate_y = 0.0
-
 # Load a texture
 def load_texture(filename):
     image = pygame.image.load(filename)
@@ -35,8 +32,6 @@ def draw_textured_cylinder(top_texture_id, bottom_texture_id, side_texture_id, r
     glEnable(GL_TEXTURE_2D)
     glBindTexture(GL_TEXTURE_2D, side_texture_id)
     glPushMatrix()
-    glRotatef(rotate_x, 1, 0, 0)
-    glRotatef(rotate_y, 0, 1, 0)
     gluCylinder(glu_quad, radius, radius, height, 32, 32)
     glTranslatef(0.0, 0.0, height)  # Translate to the top of the cylinder
     glBindTexture(GL_TEXTURE_2D, top_texture_id)
@@ -62,7 +57,11 @@ def draw_christmas_tree(trunk_texture_id, leaves_texture_id):
     glTranslatef(0.0, 0.0, trunk_height)
     glBindTexture(GL_TEXTURE_2D, leaves_texture_id)
     for layer in range(treeLayer):
-        gluCylinder(tree, trunk_radius*(treeLayer-layer), 0.0, treeHeight, 32, 32)
+        outter_radius = trunk_radius
+        if(layer == treeLayer-1):
+            outter_radius = 0.0
+        gluCylinder(tree, trunk_radius*(treeLayer-layer), outter_radius, treeHeight, 32, 32)
+        gluDisk(tree, 0.0, trunk_radius*(treeLayer-layer), 32, 32)
         glTranslatef(0.0, 0.0, treeHeight)
     glPopMatrix()
     glDisable(GL_TEXTURE_2D)
@@ -155,7 +154,6 @@ def main():
     gluLookAt(0, 15, 5,
               0, 0, 4, 
               0, 0, 1)  # Add this line
-    glTranslatef(0.0, 0.0, 0.0)
 
     files = ["textures/brick.jpg",
              "textures/wood.jpg",
@@ -165,19 +163,28 @@ def main():
              "textures/present_green.jpg"]
     texture_id = [load_texture(f) for f in files]
 
+    camera_angle = 0.0
+    camera_height = 0.0
+
     while True:
-        global rotate_x, rotate_y
-        x, y = 0, 0
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
                 quit()
-            elif event.type == pygame.MOUSEMOTION:
-                x, y = event.rel
-            #rotate_x += x
-            #rotate_y += y
+        keys = pygame.key.get_pressed()
+        if(keys[pygame.K_RIGHT]):
+            camera_angle += 1.0
+        elif(keys[pygame.K_LEFT]):
+            camera_angle += -1.0
+        elif(keys[pygame.K_UP]):
+            camera_height += 1.0
+        elif(keys[pygame.K_DOWN]):
+            camera_height += -1.0
 
-        #glRotatef(1, 3, 2, 1)
+        glRotatef(camera_angle, 0, 0, 1)
+        glTranslatef(0, 0, camera_height)
+        camera_angle = 0
+        camera_height = 0
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
 
         # Draw the textured cube
@@ -187,8 +194,9 @@ def main():
 
         draw_textured_cylinder(top_texture_id=texture_id[0], bottom_texture_id=texture_id[0], side_texture_id=texture_id[0], radius=4.0, height=1.0)
         draw_christmas_tree(trunk_texture_id=texture_id[1], leaves_texture_id=texture_id[2])
-        draw_christmas_present(texture_id[3],0.33,2.5,5,4)
-        draw_christmas_present(texture_id[4],0.5,-2.5,5,3)
+        draw_christmas_present(texture_id[3],0.33,2.5,5,3)
+        draw_christmas_present(texture_id[4],0.5,-2.5,5,2)
+        draw_christmas_present(texture_id[5],0.66,0,-3,1.66)
         pygame.display.flip()
         pygame.time.wait(10)
 
