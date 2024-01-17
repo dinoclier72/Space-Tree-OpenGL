@@ -10,6 +10,7 @@ from pygame.locals import *
 from OpenGL.GL import *
 from OpenGL.GLU import *
 from OpenGL.GLUT import *
+from math import cos,sin
 
 # Load a texture
 def load_texture(filename):
@@ -42,6 +43,36 @@ def draw_textured_cylinder(top_texture_id, bottom_texture_id, side_texture_id, r
     glPopMatrix()
     glDisable(GL_TEXTURE_2D)
 
+def draw_star(inner_radius, outter_radius):
+    Points = []
+    for i in range(18,360,36):
+        angle = i*3.14/180
+        if(len(Points)%2 == 0):
+            radius = outter_radius
+        else:
+            radius = inner_radius
+        Points.append([radius*cos(angle),radius*sin(angle)])
+    #2d base
+    glBegin(GL_TRIANGLES)
+    for i in range(1,len(Points),2):
+        processedPoints = []
+        if(i+2 >= len(Points)): 
+            processedPoints.append(Points[0])
+            processedPoints.append(Points[1])
+            processedPoints.append(Points[i])
+        else:
+            processedPoints.append(Points[i])
+            processedPoints.append(Points[i+1])
+            processedPoints.append(Points[i+2])
+        glVertex3f(processedPoints[0][0],0,processedPoints[0][1])
+        glVertex3f(processedPoints[1][0],0,processedPoints[1][1])
+        glVertex3f(processedPoints[2][0],0,processedPoints[2][1])
+    glEnd()
+    glBegin(GL_POLYGON)
+    for i in range(1,len(Points),2):
+        glVertex3f(Points[i][0],0,Points[i][1])
+    glEnd()
+
 def draw_christmas_tree(trunk_texture_id, leaves_texture_id):
     treeLayer = 5
     treeHeight = 1.0
@@ -63,6 +94,8 @@ def draw_christmas_tree(trunk_texture_id, leaves_texture_id):
         gluCylinder(tree, trunk_radius*(treeLayer-layer), outter_radius, treeHeight, 32, 32)
         gluDisk(tree, 0.0, trunk_radius*(treeLayer-layer), 32, 32)
         glTranslatef(0.0, 0.0, treeHeight)
+    glTranslatef(0.0, 0.0, 0.25)
+    draw_star(0.25,0.5)
     glPopMatrix()
     glDisable(GL_TEXTURE_2D)
 
@@ -151,9 +184,9 @@ def main():
     display = (800, 600)
     pygame.display.set_mode(display, DOUBLEBUF | OPENGL | GLUT_DEPTH)
     gluPerspective(45, (display[0] / display[1]), 0.1, 50.0)
-    gluLookAt(0, 15, 5,
-              0, 0, 4, 
-              0, 0, 1)  # Add this line
+    gluLookAt(0,15,5,
+            0, 0, 4,
+            0, 0, 1)
 
     files = ["textures/brick.jpg",
              "textures/wood.jpg",
@@ -164,27 +197,38 @@ def main():
     texture_id = [load_texture(f) for f in files]
 
     camera_angle = 0.0
-    camera_height = 0.0
+    camera_height = 5.0
 
     while True:
+        delta_camera_angle = 0.0
+        delta_camera_height = 0.0
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
                 quit()
         keys = pygame.key.get_pressed()
         if(keys[pygame.K_RIGHT]):
-            camera_angle += 1.0
+            delta_camera_angle += 0.1
         elif(keys[pygame.K_LEFT]):
-            camera_angle += -1.0
+            delta_camera_angle += -0.1
         elif(keys[pygame.K_UP]):
-            camera_height += 1.0
+            delta_camera_height += 1.0
         elif(keys[pygame.K_DOWN]):
-            camera_height += -1.0
+            delta_camera_height += -1.0
 
-        glRotatef(camera_angle, 0, 0, 1)
-        glTranslatef(0, 0, camera_height)
-        camera_angle = 0
-        camera_height = 0
+        camera_angle += delta_camera_angle
+        camera_height += delta_camera_height
+
+        glLoadIdentity()
+        glMatrixMode(GL_PROJECTION)
+        gluPerspective(45, (display[0] / display[1]), 0.1, 50.0)
+        gluLookAt(15*sin(camera_angle), 15*cos(camera_angle), camera_height,
+              0, 0, 4,
+              0, 0, 1)
+        
+
+        delta_camera_angle = 0
+        delta_camera_height = 0
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
 
         # Draw the textured cube
@@ -196,12 +240,9 @@ def main():
         draw_christmas_tree(trunk_texture_id=texture_id[1], leaves_texture_id=texture_id[2])
         draw_christmas_present(texture_id[3],0.33,2.5,5,3)
         draw_christmas_present(texture_id[4],0.5,-2.5,5,2)
-        draw_christmas_present(texture_id[5],0.66,0,-3,1.66)
+        draw_christmas_present(texture_id[5],0.66,0,-3,1.50)
         pygame.display.flip()
         pygame.time.wait(10)
 
 if __name__ == "__main__":
     main()
-
-
-
