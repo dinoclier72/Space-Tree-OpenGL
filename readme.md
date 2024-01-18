@@ -15,3 +15,5 @@ Credit pour les différentes textures trouvées sur internet
 <a href="https://www.freepik.com/free-photo/close-up-green-bush_933064.htm#query=leaf%20texture&position=3&from_view=keyword&track=ais&uuid=845c733e-7c37-4f60-8ad7-a94cc511f687">Image by kaboompics</a> on Freepik
 
 <a href="https://www.freepik.com/free-photo/misty-starry-night-sky-background_18416440.htm#query=night%20sky%20texture&position=0&from_view=keyword&track=ais&uuid=fe90f129-17a6-4167-8804-afbab48dbc88">Image by rawpixel.com</a> on Freepik
+
+Image by <a href="https://www.freepik.com/free-photo/flat-lay-metal-surface_11684377.htm#query=metal%20texture&position=13&from_view=keyword&track=ais&uuid=1eacb12d-baca-43bc-bf9d-3e7167569c55">Freepik</a>

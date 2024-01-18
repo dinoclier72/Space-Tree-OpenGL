@@ -178,7 +178,7 @@ def draw_christmas_present(texture, size,x,y,z):
     glPopMatrix()
     glDisable(GL_TEXTURE_2D)
 
-def draw_color_light_ball(light_id,position,color,size):
+def draw_color_light_ball(light_id,position,color,size,texture_id):
     glPushMatrix()
     
     glLightfv(light_id, GL_POSITION, position)
@@ -187,6 +187,9 @@ def draw_color_light_ball(light_id,position,color,size):
     glColor3f(*color)
     glTranslatef(*position)
     sphere = gluNewQuadric()
+    glEnable(GL_TEXTURE_2D)
+    glBindTexture(GL_TEXTURE_2D, texture_id)
+    gluQuadricTexture(sphere, GL_TRUE)
     gluSphere(sphere,size,50,50)
 
     glPopMatrix()
@@ -199,10 +202,10 @@ def get_ball_position(angle, radius, axis, center=[0, 0, 0]):
     elif axis == "z":
         return [center[0] + radius * cos(angle), center[1], center[2] + radius * sin(angle)]
 
-def orbit_ball(angle, radius, axis,center,light_id,color,size):
+def orbit_ball(angle, radius, axis,center,light_id,color,size,texture_id):
     angle = angle*3.14/180
     position = get_ball_position(angle, radius,axis,center)
-    draw_color_light_ball(light_id,position,color,size)
+    draw_color_light_ball(light_id,position,color,size,texture_id)
 
 def set_material_properties():
     glMaterialfv(GL_FRONT, GL_AMBIENT, GLfloat_4(0.2, 0.2, 0.2, 1.0))
@@ -228,7 +231,8 @@ def draw_sky(texture_id):
 def main():
     pygame.init()
     display = (800, 600)
-    pygame.display.set_mode(display, DOUBLEBUF | OPENGL | GLUT_DEPTH)
+    screen = pygame.display.set_mode(display, DOUBLEBUF | OPENGL | GLUT_DEPTH)
+    font = pygame.font.SysFont("Arial", 16)
     gluPerspective(45, (display[0] / display[1]), 0.1, 50.0)
     gluLookAt(0,15,5,
             0, 0, 4,
@@ -240,7 +244,8 @@ def main():
              "textures/present_blue.jpg",
              "textures/present_yellow.jpg",
              "textures/present_green.jpg",
-             "textures/sky.jpg"]
+             "textures/sky.jpg",
+             "textures/metal.jpg"]
     texture_id = [load_texture(f) for f in files]
 
     camera_angle = 0.0
@@ -278,8 +283,12 @@ def main():
             delta_camera_angle += ball2_velocity
         elif(keys[pygame.K_UP]):
             delta_camera_height += 1.0
+            if(camera_height >= 25):
+                delta_camera_height += -1.0
         elif(keys[pygame.K_DOWN]):
             delta_camera_height += -1.0
+            if(camera_height <= -20):
+                delta_camera_height += 1.0
             
         
 
@@ -323,9 +332,9 @@ def main():
             glDisable(GL_LIGHT2)
 
         set_material_properties()
-        orbit_ball(ball1_angle, 6, "y",[0,0,4],GL_LIGHT0,[1.0,.0,.0],0.3)
-        orbit_ball(ball2_angle, 6, "x",[0,0,4],GL_LIGHT1,[.0,1.0,.0],0.3)
-        orbit_ball(ball3_angle, 6, "z",[0,0,4],GL_LIGHT2,[.0,.0,1.0],0.3)
+        orbit_ball(ball1_angle, 6, "y",[0,0,4],GL_LIGHT0,[1.0,.0,.0],0.3,texture_id[7])
+        orbit_ball(ball2_angle, 6, "x",[0,0,4],GL_LIGHT1,[.0,1.0,.0],0.3,texture_id[7])
+        orbit_ball(ball3_angle, 6, "z",[0,0,4],GL_LIGHT2,[.0,.0,1.0],0.3,texture_id[7])
 
         draw_textured_cylinder(top_texture_id=texture_id[0], bottom_texture_id=texture_id[0], side_texture_id=texture_id[0], radius=4.0, height=1.0)
         draw_christmas_tree(trunk_texture_id=texture_id[1], leaves_texture_id=texture_id[2])
@@ -334,7 +343,7 @@ def main():
         draw_christmas_present(texture_id[5],0.66,0,-3,1.50)
 
         draw_sky(texture_id[6])
-        
+
         pygame.display.flip()
         pygame.time.wait(10)
 
