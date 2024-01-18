@@ -231,8 +231,7 @@ def draw_sky(texture_id):
 def main():
     pygame.init()
     display = (800, 600)
-    screen = pygame.display.set_mode(display, DOUBLEBUF | OPENGL | GLUT_DEPTH)
-    font = pygame.font.SysFont("Arial", 16)
+    pygame.display.set_mode(display, DOUBLEBUF | OPENGL | GLUT_DEPTH)
     gluPerspective(45, (display[0] / display[1]), 0.1, 50.0)
     gluLookAt(0,15,5,
             0, 0, 4,
