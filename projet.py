@@ -178,6 +178,37 @@ def draw_christmas_present(texture, size,x,y,z):
     glPopMatrix()
     glDisable(GL_TEXTURE_2D)
 
+def draw_color_light_ball(light_id,position,color,size):
+    glPushMatrix()
+    
+    glLightfv(light_id, GL_POSITION, position)
+    glLightfv(light_id, GL_DIFFUSE, color)
+
+    glColor3f(*color)
+    glTranslatef(*position)
+    sphere = gluNewQuadric()
+    gluSphere(sphere,size,50,50)
+
+    glPopMatrix()
+
+def get_ball_position(angle, radius, axis, center=[0, 0, 0]):
+    if axis == "x":
+        return [center[0] + radius * cos(angle), center[1] + radius * sin(angle), center[2]]
+    elif axis == "y":
+        return [center[0], center[1] + radius * cos(angle), center[2] + radius * sin(angle)]
+    elif axis == "z":
+        return [center[0] + radius * cos(angle), center[1], center[2] + radius * sin(angle)]
+
+def orbit_ball(angle, radius, axis,center,light_id,color,size):
+    angle = angle*3.14/180
+    position = get_ball_position(angle, radius,axis,center)
+    draw_color_light_ball(light_id,position,color,size)
+
+def set_material_properties():
+    glMaterialfv(GL_FRONT, GL_AMBIENT, GLfloat_4(0.2, 0.2, 0.2, 1.0))
+    glMaterialfv(GL_FRONT, GL_DIFFUSE, GLfloat_4(0.0, 0.0, 0.0, 1.0))  # Set diffuse color to black
+    glMaterialfv(GL_FRONT, GL_SPECULAR, GLfloat_4(1.0, 1.0, 1.0, 1.0))  # Set specular color to white
+    glMaterialfv(GL_FRONT, GL_SHININESS, GLfloat(100.0))  # Increase shininess for high reflection
 
 def main():
     pygame.init()
@@ -198,6 +229,15 @@ def main():
 
     camera_angle = 0.0
     camera_height = 5.0
+    ball1_angle = 60.0
+    ball2_angle = 120.0
+    ball3_angle = 180.0
+
+    ball1_velocity = 0.66
+    ball2_velocity = 1
+    ball3_velocity = 1.33
+
+    lights_enabled = [True, True, True]
 
     while True:
         delta_camera_angle = 0.0
@@ -215,6 +255,13 @@ def main():
             delta_camera_height += 1.0
         elif(keys[pygame.K_DOWN]):
             delta_camera_height += -1.0
+        elif(keys[pygame.K_1]):
+            lights_enabled[0] = not lights_enabled[0]
+        elif(keys[pygame.K_2]):
+            lights_enabled[1] = not lights_enabled[1]
+        elif(keys[pygame.K_3]):
+            lights_enabled[2] = not lights_enabled[2]
+        
 
         camera_angle += delta_camera_angle
         camera_height += delta_camera_height
@@ -226,21 +273,45 @@ def main():
               0, 0, 4,
               0, 0, 1)
         
-
         delta_camera_angle = 0
         delta_camera_height = 0
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
 
-        # Draw the textured cube
-        # Draw the textured cylinder
+        ball1_angle = ((ball1_angle + ball1_velocity) % 360)
+        ball2_angle = ((ball2_angle + ball2_velocity) % 360)
+        ball3_angle = ((ball3_angle + ball3_velocity) % 360)
+
+        glClearColor(0.5,0.5,0.5,1)
+
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
         glEnable(GL_DEPTH_TEST)
         glDepthFunc(GL_LESS)
+        glEnable(GL_LIGHTING)
+        glLightModelfv(GL_LIGHT_MODEL_AMBIENT, GLfloat_4(0.2, 0.2, 0.2, 1.0))
+
+        if lights_enabled[0]:
+            glEnable(GL_LIGHT0)
+        else:
+            glDisable(GL_LIGHT0)
+        if lights_enabled[1]:
+            glEnable(GL_LIGHT1)
+        else:
+            glDisable(GL_LIGHT1)
+        if lights_enabled[2]:
+            glEnable(GL_LIGHT2)
+        else:
+            glDisable(GL_LIGHT2)
+
+        #set_material_properties()
+        orbit_ball(ball1_angle, 6, "y",[0,0,4],GL_LIGHT0,[1.0,.0,.0],0.3)
+        orbit_ball(ball2_angle, 6, "x",[0,0,4],GL_LIGHT1,[.0,1.0,.0],0.3)
+        orbit_ball(ball3_angle, 6, "z",[0,0,4],GL_LIGHT2,[.0,.0,1.0],0.3)
 
         draw_textured_cylinder(top_texture_id=texture_id[0], bottom_texture_id=texture_id[0], side_texture_id=texture_id[0], radius=4.0, height=1.0)
         draw_christmas_tree(trunk_texture_id=texture_id[1], leaves_texture_id=texture_id[2])
         draw_christmas_present(texture_id[3],0.33,2.5,5,3)
         draw_christmas_present(texture_id[4],0.5,-2.5,5,2)
         draw_christmas_present(texture_id[5],0.66,0,-3,1.50)
+        
         pygame.display.flip()
         pygame.time.wait(10)
 
