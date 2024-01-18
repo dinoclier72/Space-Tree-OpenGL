@@ -206,9 +206,24 @@ def orbit_ball(angle, radius, axis,center,light_id,color,size):
 
 def set_material_properties():
     glMaterialfv(GL_FRONT, GL_AMBIENT, GLfloat_4(0.2, 0.2, 0.2, 1.0))
-    glMaterialfv(GL_FRONT, GL_DIFFUSE, GLfloat_4(0.0, 0.0, 0.0, 1.0))  # Set diffuse color to black
-    glMaterialfv(GL_FRONT, GL_SPECULAR, GLfloat_4(1.0, 1.0, 1.0, 1.0))  # Set specular color to white
-    glMaterialfv(GL_FRONT, GL_SHININESS, GLfloat(100.0))  # Increase shininess for high reflection
+    glMaterialfv(GL_FRONT, GL_DIFFUSE, GLfloat_4(0.8, 0.8, 0.8, 1.0))
+    glMaterialfv(GL_FRONT, GL_SPECULAR, GLfloat_4(1.0, 0.0, 1.0, 1.0))
+    glMaterialfv(GL_FRONT, GL_SHININESS, GLfloat(50.0))
+
+def draw_sky(texture_id):
+    glPushMatrix()
+    glDisable(GL_LIGHTING)
+    
+    glScalef(15,15,15)
+    glEnable(GL_TEXTURE_2D)
+    glBindTexture(GL_TEXTURE_2D, texture_id)
+    quad = gluNewQuadric()
+    gluQuadricTexture(quad, GL_TRUE)
+    gluSphere(quad, 2, 50, 50)
+    glDisable(GL_TEXTURE_2D)
+    glPopMatrix()
+    glEnable(GL_LIGHTING)
+    glEnable(GL_DEPTH_TEST)
 
 def main():
     pygame.init()
@@ -224,11 +239,13 @@ def main():
              "textures/leaves.jpg",
              "textures/present_blue.jpg",
              "textures/present_yellow.jpg",
-             "textures/present_green.jpg"]
+             "textures/present_green.jpg",
+             "textures/sky.jpg"]
     texture_id = [load_texture(f) for f in files]
 
     camera_angle = 0.0
     camera_height = 5.0
+
     ball1_angle = 60.0
     ball2_angle = 120.0
     ball3_angle = 180.0
@@ -246,21 +263,24 @@ def main():
             if event.type == pygame.QUIT:
                 pygame.quit()
                 quit()
+            elif event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_1:
+                    lights_enabled[0] = not lights_enabled[0]
+                elif event.key == pygame.K_2:
+                    lights_enabled[1] = not lights_enabled[1]
+                elif event.key == pygame.K_3:
+                    lights_enabled[2] = not lights_enabled[2]
+                
         keys = pygame.key.get_pressed()
         if(keys[pygame.K_RIGHT]):
-            delta_camera_angle += 0.1
+            delta_camera_angle += -ball2_velocity
         elif(keys[pygame.K_LEFT]):
-            delta_camera_angle += -0.1
+            delta_camera_angle += ball2_velocity
         elif(keys[pygame.K_UP]):
             delta_camera_height += 1.0
         elif(keys[pygame.K_DOWN]):
             delta_camera_height += -1.0
-        elif(keys[pygame.K_1]):
-            lights_enabled[0] = not lights_enabled[0]
-        elif(keys[pygame.K_2]):
-            lights_enabled[1] = not lights_enabled[1]
-        elif(keys[pygame.K_3]):
-            lights_enabled[2] = not lights_enabled[2]
+            
         
 
         camera_angle += delta_camera_angle
@@ -268,8 +288,9 @@ def main():
 
         glLoadIdentity()
         glMatrixMode(GL_PROJECTION)
-        gluPerspective(45, (display[0] / display[1]), 0.1, 50.0)
-        gluLookAt(15*sin(camera_angle), 15*cos(camera_angle), camera_height,
+        radian_angle = camera_angle*3.14/180
+        gluPerspective(45, (display[0] / display[1]), 0.1, 60.0)
+        gluLookAt(15*sin(radian_angle), 15*cos(radian_angle), camera_height,
               0, 0, 4,
               0, 0, 1)
         
@@ -280,7 +301,7 @@ def main():
         ball2_angle = ((ball2_angle + ball2_velocity) % 360)
         ball3_angle = ((ball3_angle + ball3_velocity) % 360)
 
-        glClearColor(0.5,0.5,0.5,1)
+        glClearColor(0,0,0,0)
 
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
         glEnable(GL_DEPTH_TEST)
@@ -301,7 +322,7 @@ def main():
         else:
             glDisable(GL_LIGHT2)
 
-        #set_material_properties()
+        set_material_properties()
         orbit_ball(ball1_angle, 6, "y",[0,0,4],GL_LIGHT0,[1.0,.0,.0],0.3)
         orbit_ball(ball2_angle, 6, "x",[0,0,4],GL_LIGHT1,[.0,1.0,.0],0.3)
         orbit_ball(ball3_angle, 6, "z",[0,0,4],GL_LIGHT2,[.0,.0,1.0],0.3)
@@ -311,6 +332,8 @@ def main():
         draw_christmas_present(texture_id[3],0.33,2.5,5,3)
         draw_christmas_present(texture_id[4],0.5,-2.5,5,2)
         draw_christmas_present(texture_id[5],0.66,0,-3,1.50)
+
+        draw_sky(texture_id[6])
         
         pygame.display.flip()
         pygame.time.wait(10)
