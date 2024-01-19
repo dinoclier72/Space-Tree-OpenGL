@@ -34,12 +34,11 @@ def draw_textured_cylinder(top_texture_id, bottom_texture_id, side_texture_id, r
     glBindTexture(GL_TEXTURE_2D, side_texture_id)
     glPushMatrix()
     gluCylinder(glu_quad, radius, radius, height, 32, 32)
-    glTranslatef(0.0, 0.0, height)  # Translate to the top of the cylinder
+    glTranslatef(0.0, 0.0, -height)
+    gluCylinder(glu_quad, 0, radius, height, 32, 32)
+    glTranslatef(0.0, 0.0, 2*height)  # Translate to the top of the cylinder
     glBindTexture(GL_TEXTURE_2D, top_texture_id)
     gluDisk(glu_quad, 0.0, radius, 32, 32)  # Draw the top face
-    glTranslatef(0.0, 0.0, -height)  # Translate to the bottom of the cylinder
-    glBindTexture(GL_TEXTURE_2D, bottom_texture_id)
-    gluDisk(glu_quad, 0.0, radius, 32, 32)  # Draw the bottom face
     glPopMatrix()
     glDisable(GL_TEXTURE_2D)
 
@@ -213,10 +212,30 @@ def set_material_properties():
     glMaterialfv(GL_FRONT, GL_SPECULAR, GLfloat_4(1.0, 0.0, 1.0, 1.0))
     glMaterialfv(GL_FRONT, GL_SHININESS, GLfloat(50.0))
 
+def draw_button(texture_id,position,size,Voffset,Hoffset):
+    glDisable(GL_LIGHTING)
+    glDisable(GL_DEPTH_TEST)
+    glPushMatrix()
+    glLoadIdentity()
+    glEnable(GL_TEXTURE_2D)
+    glBindTexture(GL_TEXTURE_2D, texture_id)
+    glBegin(GL_QUADS)
+    glColor3f(1,1,1)
+    glTexCoord2f(0, 0)
+    glVertex3f(position-size-Hoffset,position-size-Voffset,0)
+    glTexCoord2f(1, 0)
+    glVertex3f(position-Hoffset,position-size-Voffset,0)
+    glTexCoord2f(1, 1)
+    glVertex3f(position-Hoffset,position-Voffset,0)
+    glTexCoord2f(0, 1)
+    glVertex3f(position-size-Hoffset,position-Voffset,0)
+    glEnd()
+    glPopMatrix()
+    glEnable(GL_LIGHTING)
+
 def draw_sky(texture_id):
     glPushMatrix()
     glDisable(GL_LIGHTING)
-    
     glScalef(15,15,15)
     glEnable(GL_TEXTURE_2D)
     glBindTexture(GL_TEXTURE_2D, texture_id)
@@ -228,15 +247,23 @@ def draw_sky(texture_id):
     glEnable(GL_LIGHTING)
     glEnable(GL_DEPTH_TEST)
 
+def music():
+    pygame.mixer.init()
+    pygame.mixer.music.load("music/reflected-light-147979.mp3")
+    pygame.mixer.music.set_volume(0.1)
+    pygame.mixer.music.play(-1)
+
 def main():
     pygame.init()
     display = (800, 600)
     pygame.display.set_mode(display, DOUBLEBUF | OPENGL | GLUT_DEPTH)
+    pygame.font.Font(None, 36)
     gluPerspective(45, (display[0] / display[1]), 0.1, 50.0)
     gluLookAt(0,15,5,
             0, 0, 4,
             0, 0, 1)
-
+    pygame.display.set_caption('Space Christmas Tree')
+    music()
     files = ["textures/brick.jpg",
              "textures/wood.jpg",
              "textures/leaves.jpg",
@@ -246,6 +273,9 @@ def main():
              "textures/sky.jpg",
              "textures/metal.jpg"]
     texture_id = [load_texture(f) for f in files]
+    redlight_id = [load_texture(f) for f in ["textures/red_light_off.png","textures/red_light_on.png"]]
+    greenlight_id = [load_texture(f) for f in ["textures/green_light_off.png","textures/green_light_on.png"]]
+    bluelight_id = [load_texture(f) for f in ["textures/blue_light_off.png","textures/blue_light_on.png"]]
 
     camera_angle = 0.0
     camera_height = 5.0
@@ -259,6 +289,8 @@ def main():
     ball3_velocity = 1.33
 
     lights_enabled = [True, True, True]
+
+    display_button = True
 
     while True:
         delta_camera_angle = 0.0
@@ -274,6 +306,8 @@ def main():
                     lights_enabled[1] = not lights_enabled[1]
                 elif event.key == pygame.K_3:
                     lights_enabled[2] = not lights_enabled[2]
+                elif event.key == pygame.K_h:
+                    display_button = not display_button
                 
         keys = pygame.key.get_pressed()
         if(keys[pygame.K_RIGHT]):
@@ -286,7 +320,7 @@ def main():
                 delta_camera_height += -1.0
         elif(keys[pygame.K_DOWN]):
             delta_camera_height += -1.0
-            if(camera_height <= -20):
+            if(camera_height <= -25):
                 delta_camera_height += 1.0
             
         
@@ -342,6 +376,11 @@ def main():
         draw_christmas_present(texture_id[5],0.66,0,-3,1.50)
 
         draw_sky(texture_id[6])
+
+        if(display_button):
+            draw_button(redlight_id[lights_enabled[0]],0.95,0.20,0.05,0.05)
+            draw_button(greenlight_id[lights_enabled[1]],0.95,0.20,0.30,0.05)
+            draw_button(bluelight_id[lights_enabled[2]],0.95,0.20,0.55,0.05)
 
         pygame.display.flip()
         pygame.time.wait(10)
